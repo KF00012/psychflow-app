@@ -62,7 +62,7 @@ def load_assessment_matrix():
 
 matrix_df = load_assessment_matrix()
 
-# --- SIDEBAR: SCRATCHPAD & POLICY TOOL ---
+# --- SIDEBAR: SCRATCHPAD & POLICY SEARCH ---
 with st.sidebar:
     st.title("🧠 PsychFlow Pro")
     st.write("---")
