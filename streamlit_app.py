@@ -51,8 +51,8 @@ def load_assessment_matrix():
             
             for sheet_name in excel_file.sheet_names:
                 df = pd.read_excel("Assessment_Matrix.xlsx", sheet_name=sheet_name)
-                # If your tabs are named by category, we can inject that information seamlessly
-                if "Category" not in df.columns:
+                # Auto-inject the tab name if a Category column isn't explicitly defined
+                if "Category" not in df.columns and "Category of Assessment" not in df.columns:
                     df["Workbook Tab / Category"] = sheet_name
                 all_sheets.append(df)
                 
@@ -256,7 +256,7 @@ with tab4:
         all_sheets = []
         for sheet_name in excel_file.sheet_names:
             df = pd.read_excel(uploaded_matrix, sheet_name=sheet_name)
-            if "Category" not in df.columns:
+            if "Category" not in df.columns and "Category of Assessment" not in df.columns:
                 df["Workbook Tab / Category"] = sheet_name
             all_sheets.append(df)
             
