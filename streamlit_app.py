@@ -62,7 +62,7 @@ def load_assessment_matrix():
 
 matrix_df = load_assessment_matrix()
 
-# --- SIDEBAR: SCRATCHPAD & POLICY SEARCH ---
+# --- SIDEBAR: restored SCRATCHPAD & POLICY MANUAL ---
 with st.sidebar:
     st.title("🧠 PsychFlow Pro")
     st.write("---")
@@ -124,7 +124,7 @@ with tab1:
                     with col_status:
                         years_old = (datetime.now().date() - last_test_date).days / 365.25
                         if years_old > 6.0:
-                            st.error(f"❌ Expired ({years_old:.1f} yrs old): Exceeds 6-year threshold. Fresh testing mandatory.")
+                            st.error(f"❌ Expired ({years_old:.1f} yrs old): Exceeds 6-year threshold. New assessment mandatory.")
                         elif years_old > 3.0:
                             st.warning(f"⚠️ Transitional ({years_old:.1f} yrs old): Valid for longitudinal tracking ONLY.")
                         else:
