@@ -12,6 +12,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- CUSTOM CSS FOR PROFESSIONAL LOOK ---
+st.markdown("""
+    <style>
+    .main { background-color: #f8f9fa; }
+    .metric-card {
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-left: 5px solid #4e73df;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- SIMULATED DATABASE / SESSION STATE ---
 if 'cases' not in st.session_state:
     st.session_state.cases = pd.DataFrame([
@@ -43,7 +57,6 @@ def load_assessment_matrix():
             all_sheets = []
             for sheet_name in excel_file.sheet_names:
                 df = pd.read_excel("Assessment_Matrix.xlsx", sheet_name=sheet_name)
-                # Ensure every sheet tracks which category tab it came from
                 df["Assessment Category Tab"] = sheet_name
                 all_sheets.append(df)
             if all_sheets:
@@ -51,7 +64,6 @@ def load_assessment_matrix():
         except Exception:
             pass
             
-    # Default fallback data if no workbook has been uploaded yet
     return pd.DataFrame([
         {"Assessment Category Tab": "Cognitive/Intellectual", "Instrument": "WISC-V", "Publisher": "Pearson"},
         {"Assessment Category Tab": "Cognitive/Intellectual", "Instrument": "WJ-IV COG", "Publisher": "Riverside"},
@@ -95,13 +107,11 @@ with tab1:
         with st.expander(f"💼 Case: {row['Student Initials']} ({row['School']}) — {row['Eval Type']} — Due: {row['Due Date']}"):
             st.markdown(f"**Target Areas Required for Criteria Check:** {', '.join(row['Categories Needed'])}")
             
-            # Contextual Split: Initial vs Re-evaluation workflow
             if row['Eval Type'] == "Initial Evaluation":
                 st.info("🔍 **Initial Evaluation Protocol:** Isolate missing measures. Select the instruments you intend to administer from your active catalog tabs:")
                 for cat in row['Categories Needed']:
                     available_tests = matrix_df[matrix_df["Assessment Category Tab"] == cat]
                     if not available_tests.empty:
-                        # Fallback to column discovery if standard 'Instrument' column name varies
                         test_col = "Instrument" if "Instrument" in available_tests.columns else available_tests.columns[0]
                         st.selectbox(f"Select Instrument for {cat}:", available_tests[test_col].unique(), key=f"init_{idx}_{cat}")
                     else:
@@ -115,7 +125,7 @@ with tab1:
                     col_date, col_status = st.columns([2, 3])
                     
                     with col_date:
-                        last_test_date = st.date_input("Date of Last Administered Measure:", value=datetime.now().date() - timedelta(days=365*4), key=f_date_"{idx}_{cat}")
+                        last_test_date = st.date_input("Date of Last Administered Measure:", value=datetime.now().date() - timedelta(days=365*4), key=f"date_{idx}_{cat}")
                     
                     with col_status:
                         years_old = (datetime.now().date() - last_test_date).days / 365.25
