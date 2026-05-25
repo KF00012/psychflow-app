@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
 import pypdf
+import os
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -12,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CUSTOM CSS ---
+# --- CUSTOM CSS FOR PROFESSIONAL LOOK ---
 st.markdown("""
     <style>
     .main { background-color: #f8f9fa; }
@@ -26,7 +27,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- SIMULATED CASE DATABASE ---
+# --- SIMULATED DATABASE / SESSION STATE ---
 if 'cases' not in st.session_state:
     st.session_state.cases = pd.DataFrame([
         {
@@ -40,13 +41,38 @@ if 'cases' not in st.session_state:
         }
     ])
 
+# --- HELPER FUNCTION: LOAD ASSESSMENT MATRIX ---
+def load_assessment_matrix():
+    # Look for either an Excel file or a CSV file
+    if os.path.exists("Assessment_Matrix.xlsx"):
+        try: return pd.read_excel("Assessment_Matrix.xlsx")
+        except Exception: pass
+    elif os.path.exists("Assessment_Matrix.csv"):
+        try: return pd.read_csv("Assessment_Matrix.csv")
+        except Exception: pass
+        
+    # Fallback default inventory split by category if no file exists yet
+    return pd.DataFrame([
+        {"Category of Assessment": "Cognitive/Intellectual", "Available Instruments": "WISC-V, WAIS-IV, WJ-IV COG, KABC-II"},
+        {"Category of Assessment": "Academic Achievement", "Available Instruments": "WJ-IV ACH, KTEA-3, WIAT-4"},
+        {"Category of Assessment": "Executive Functioning / Attention", "Available Instruments": "BRIEF-2, Conners-4, CEFI"},
+        {"Category of Assessment": "Social-Emotional / Behavioral", "Available Instruments": "BASC-3, ASRS, Beck Scales"}
+    ])
+
+matrix_df = load_assessment_matrix()
+
 # --- SIDEBAR ---
 with st.sidebar:
     st.title("🧠 PsychFlow Pro")
     st.write("---")
     st.subheader("📚 Active Resources")
     st.success("📁 Final version Policies Procedures August 2024 V2.pdf Loaded")
-    st.info("📊 Assessment_Matrix.csv (Pending upload)")
+    
+    if os.path.exists("Assessment_Matrix.xlsx") or os.path.exists("Assessment_Matrix.csv"):
+        st.success("📊 Assessment Matrix Loaded and Active")
+    else:
+        st.info("📊 Using Default Test Matrix")
+    
     st.write("---")
     st.caption("Logged in as: Dr. K. Fonder")
 
@@ -73,7 +99,6 @@ with tab1:
     for idx, row in st.session_state.cases.iterrows():
         with st.expander(f"💼 Student: {row['Student Initials']} ({row['Category']}) — [{row['Doc Type']}] — Due: {row['Due Date']}"):
             
-            # Contextual rules based on Outside vs Internal documents
             if row['Doc Type'] == "Outside Private Evaluation":
                 st.markdown("⚠️ **CRITICAL OUTSIDE EVALUATION COMPLIANCE PARAMETERS (Manual Sec 5.2):**")
                 st.checkbox("Review private team conclusions for 'Adverse Educational Impact' verification parameters", value=False, key=f"out_a_{idx}")
@@ -82,7 +107,6 @@ with tab1:
                 st.markdown("📋 **STANDARD INTERNAL REGULATORY CHECKLIST:**")
                 st.checkbox("Compile longitudinal district records and current tier intervention summary tracking", value=True, key=f"int_r_{idx}")
                 
-            # Category-specific rules
             st.markdown("**Disability Category Milestones:**")
             if "Learning" in row['Category'] or "SLD" in row['Category']:
                 st.checkbox("Secure updated Classroom Teacher Assessment framework data (Manual Sec 4.1)", value=False, key=f"sld_t_{idx}")
@@ -108,7 +132,6 @@ with tab2:
             reader = pypdf.PdfReader(uploaded_any_doc)
             num_pages = len(reader.pages)
             
-            # Contextual extraction presets based on selection dropdown
             if "Outside Private" in doc_profile:
                 parsed_initials = "B.R."
                 parsed_category = "Other Health Impairment (ADHD Profile)"
@@ -123,7 +146,6 @@ with tab2:
             st.markdown("### 🔍 Historical Data Age Verification")
             st.write("Input the date of the oldest evaluation component contained within this file to verify district compliance parameters:")
             
-            # The 6-Year Lookback Logic Box
             data_date = st.date_input("Date of Oldest Test Component in File:", value=datetime.now().date() - timedelta(days=365*4))
             years_old = (datetime.now().date() - data_date).days / 365.25
             
@@ -198,19 +220,30 @@ with tab3:
     )
 
 with tab4:
-    st.subheader("🗂️ Integrated Assessment Tool Matrix")
-    st.write("Preview of how your custom test categories map directly into the dashboard platform layout:")
+    st.subheader("🗂️ Interactive Assessment Tool Matrix")
+    st.write("This tab displays your personalized assessment menu grouped cleanly by Category.")
     
-    preview_matrix = pd.DataFrame([
-        {"Category of Assessment": "Cognitive/Intellectual", "Available Instruments": "WISC-V, WAIS-IV, WJ-IV COG, KABC-II", "Typical Domain Checked": "General Fluid Reasoning, Processing Speed"},
-        {"Category of Assessment": "Academic Achievement", "Available Instruments": "WJ-IV ACH, KTEA-3, WIAT-4", "Typical Domain Checked": "Basic Reading, Math Calculation, Written Expression"},
-        {"Category of Assessment": "Executive Functioning / Attention", "Available Instruments": "BRIEF-2, Conners-4, CEFI", "Typical Domain Checked": "Working Memory, Inhibitory Control, Emotional Regulation"},
-        {"Category of Assessment": "Social-Emotional / Behavioral", "Available Instruments": "BASC-3, ASRS, Beck Scales", "Typical Domain Checked": "Externalizing Behaviors, Social Communication Friction"}
-    ])
-    st.table(preview_matrix)
+    # Filter selection box mapping to your category split
+    if "Category of Assessment" in matrix_df.columns:
+        unique_categories = matrix_df["Category of Assessment"].unique().tolist()
+        selected_cat = st.selectbox("Filter Available Tests by Category:", unique_categories)
+        
+        filtered_df = matrix_df[matrix_df["Category of Assessment"] == selected_cat]
+        st.dataframe(filtered_df, use_container_width=True)
+    else:
+        st.dataframe(matrix_df, use_container_width=True)
     
     st.write("---")
-    st.markdown("### 📤 Upload Your Master Spreadsheet Resource")
-    uploaded_matrix = st.file_uploader("Drop your test inventory spreadsheet here (.csv format)", type=["csv"])
+    st.markdown("### 📤 Upload/Refresh Your Master Spreadsheet Resource")
+    uploaded_matrix = st.file_uploader("Drop your updated test inventory spreadsheet here (.csv or .xlsx format)", type=["csv", "xlsx"])
     if uploaded_matrix:
-        st.success("🎉 Spreadsheet recognized! Ready to map your custom test inventory directly into the workspace dropdowns on your next version update.")
+        # Check if user uploaded xlsx or csv
+        if uploaded_matrix.name.endswith(".xlsx"):
+            matrix_df = pd.read_excel(uploaded_matrix)
+            matrix_df.to_excel("Assessment_Matrix.xlsx", index=False)
+        else:
+            matrix_df = pd.read_csv(uploaded_matrix)
+            matrix_df.to_csv("Assessment_Matrix.csv", index=False)
+            
+        st.success("🎉 Custom test matrix compiled and saved locally! Switch categories in the dropdown above to view.")
+        st.rerun()
