@@ -41,8 +41,9 @@ if 'cases' not in st.session_state:
         }
     ])
 
-# --- HELPER FUNCTION: LOAD ASSESSMENT MATRIX ---
+# --- SMART HELPER FUNCTION: LOAD ASSESSMENT MATRIX ---
 def load_assessment_matrix():
+    # Look for uploaded spreadsheet files
     if os.path.exists("Assessment_Matrix.xlsx"):
         try: return pd.read_excel("Assessment_Matrix.xlsx")
         except Exception: pass
@@ -50,11 +51,12 @@ def load_assessment_matrix():
         try: return pd.read_csv("Assessment_Matrix.csv")
         except Exception: pass
         
+    # Default fallback inventory split cleanly by category
     return pd.DataFrame([
-        {"Category of Assessment": "Cognitive/Intellectual", "Available Instruments": "WISC-V, WAIS-IV, WJ-IV COG, KABC-II"},
-        {"Category of Assessment": "Academic Achievement", "Available Instruments": "WJ-IV ACH, KTEA-3, WIAT-4"},
-        {"Category of Assessment": "Executive Functioning / Attention", "Available Instruments": "BRIEF-2, Conners-4, CEFI"},
-        {"Category of Assessment": "Social-Emotional / Behavioral", "Available Instruments": "BASC-3, ASRS, Beck Scales"}
+        {"Category": "Cognitive/Intellectual", "Tests Available": "WISC-V, WAIS-IV, WJ-IV COG, KABC-II"},
+        {"Category": "Academic Achievement", "Tests Available": "WJ-IV ACH, KTEA-3, WIAT-4"},
+        {"Category": "Executive Functioning / Attention", "Tests Available": "BRIEF-2, Conners-4, CEFI"},
+        {"Category": "Social-Emotional / Behavioral", "Tests Available": "BASC-3, ASRS, Beck Scales"}
     ])
 
 matrix_df = load_assessment_matrix()
@@ -67,7 +69,7 @@ with st.sidebar:
     st.success("📁 Final version Policies Procedures August 2024 V2.pdf Loaded")
     
     if os.path.exists("Assessment_Matrix.xlsx") or os.path.exists("Assessment_Matrix.csv"):
-        st.success("📊 Assessment Matrix Loaded and Active")
+        st.success("📊 Custom Assessment Matrix Loaded")
     else:
         st.info("📊 Using Default Test Matrix")
     
@@ -165,7 +167,8 @@ with tab2:
                 v_consent = st.date_input("Timeline Initiation Date (Consent Date):", value=datetime.now().date())
                 v_due = st.date_input("Calculated Compliance Boundary (60 Days Out):", value=datetime.now().date() + timedelta(days=60))
                 
-            if st.button("🚀 Confirm Intake & Generate Specialized Checklists"):
+            submit_btn = st.button("🚀 Confirm Intake & Generate Specialized Checklists")
+            if submit_btn:
                 new_row = {
                     "Student Initials": v_initials,
                     "School": v_school,
@@ -219,14 +222,18 @@ with tab3:
 
 with tab4:
     st.subheader("🗂️ Interactive Assessment Tool Matrix")
-    st.write("This tab displays your personalized assessment menu grouped cleanly by Category.")
+    st.write("This tab displays your personalized assessment menu dynamically based on your file columns.")
     
-    if "Category of Assessment" in matrix_df.columns:
-        unique_categories = matrix_df["Category of Assessment"].unique().tolist()
-        selected_cat = st.selectbox("Filter Available Tests by Category:", unique_categories)
-        
-        filtered_df = matrix_df[matrix_df["Category of Assessment"] == selected_cat]
-        st.dataframe(filtered_df, use_container_width=True)
+    # DYNAMIC COLUMN SCANNER: Automatically detects whatever columns exist in your spreadsheet
+    if len(matrix_df.columns) > 0:
+        first_column = matrix_df.columns[0]
+        try:
+            unique_values = matrix_df[first_column].dropna().unique().tolist()
+            selected_filter = st.selectbox(f"Filter entries by {first_column}:", unique_values)
+            filtered_df = matrix_df[matrix_df[first_column] == selected_filter]
+            st.dataframe(filtered_df, use_container_width=True)
+        except Exception:
+            st.dataframe(matrix_df, use_container_width=True)
     else:
         st.dataframe(matrix_df, use_container_width=True)
     
@@ -237,9 +244,11 @@ with tab4:
         if uploaded_matrix.name.endswith(".xlsx"):
             matrix_df = pd.read_excel(uploaded_matrix)
             matrix_df.to_excel("Assessment_Matrix.xlsx", index=False)
+            if os.path.exists("Assessment_Matrix.csv"): os.remove("Assessment_Matrix.csv")
         else:
             matrix_df = pd.read_csv(uploaded_matrix)
             matrix_df.to_csv("Assessment_Matrix.csv", index=False)
+            if os.path.exists("Assessment_Matrix.xlsx"): os.remove("Assessment_Matrix.xlsx")
             
-        st.success("🎉 Custom test matrix compiled and saved locally! Switch categories in the dropdown above to view.")
+        st.success("🎉 Custom test matrix compiled and saved successfully! Your layout columns have been auto-mapped.")
         st.rerun()
