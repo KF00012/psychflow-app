@@ -159,6 +159,7 @@ with tab2:
             all_categories = matrix_df["Assessment Category Tab"].unique().tolist()
             categories_needed = st.multiselect("Select Target Areas for Criteria Check:", all_categories, default=all_categories[:2])
             
+        # FIXED: Using the flawless Streamlit form button command here
         submit_btn = st.form_submit_button("Confirm Intake & Calculate Compliance Timelines")
         if submit_btn:
             if initials:
