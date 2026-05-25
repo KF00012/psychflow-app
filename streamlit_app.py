@@ -43,7 +43,6 @@ if 'cases' not in st.session_state:
 
 # --- HELPER FUNCTION: LOAD ASSESSMENT MATRIX ---
 def load_assessment_matrix():
-    # Look for either an Excel file or a CSV file
     if os.path.exists("Assessment_Matrix.xlsx"):
         try: return pd.read_excel("Assessment_Matrix.xlsx")
         except Exception: pass
@@ -51,7 +50,6 @@ def load_assessment_matrix():
         try: return pd.read_csv("Assessment_Matrix.csv")
         except Exception: pass
         
-    # Fallback default inventory split by category if no file exists yet
     return pd.DataFrame([
         {"Category of Assessment": "Cognitive/Intellectual", "Available Instruments": "WISC-V, WAIS-IV, WJ-IV COG, KABC-II"},
         {"Category of Assessment": "Academic Achievement", "Available Instruments": "WJ-IV ACH, KTEA-3, WIAT-4"},
@@ -223,7 +221,6 @@ with tab4:
     st.subheader("🗂️ Interactive Assessment Tool Matrix")
     st.write("This tab displays your personalized assessment menu grouped cleanly by Category.")
     
-    # Filter selection box mapping to your category split
     if "Category of Assessment" in matrix_df.columns:
         unique_categories = matrix_df["Category of Assessment"].unique().tolist()
         selected_cat = st.selectbox("Filter Available Tests by Category:", unique_categories)
@@ -237,7 +234,6 @@ with tab4:
     st.markdown("### 📤 Upload/Refresh Your Master Spreadsheet Resource")
     uploaded_matrix = st.file_uploader("Drop your updated test inventory spreadsheet here (.csv or .xlsx format)", type=["csv", "xlsx"])
     if uploaded_matrix:
-        # Check if user uploaded xlsx or csv
         if uploaded_matrix.name.endswith(".xlsx"):
             matrix_df = pd.read_excel(uploaded_matrix)
             matrix_df.to_excel("Assessment_Matrix.xlsx", index=False)
