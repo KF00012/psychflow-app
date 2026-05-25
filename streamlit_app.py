@@ -116,7 +116,7 @@ with tab2:
             consent_date = st.date_input("Consent Signed Date")
             psychologist = st.text_input("Assigned Psychologist", value="Dr. K. Fonder")
             
-        submit_btn = st.form_submit_form_button("Add Case & Calculate Timelines")
+        submit_btn = st.form_submit_button("Add Case & Calculate Timelines")
         
         if submit_btn:
             if initials:
