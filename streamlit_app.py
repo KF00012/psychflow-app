@@ -124,7 +124,7 @@ with tab1:
                     with col_status:
                         years_old = (datetime.now().date() - last_test_date).days / 365.25
                         if years_old > 6.0:
-                            st.error(f"❌ Expired ({years_old:.1f} yrs old): Exceeds 6-year threshold. New assessment mandatory.")
+                            st.error(f"❌ Expired ({years_old:.1f} yrs old): Exceeds 6-year threshold. Fresh testing mandatory.")
                         elif years_old > 3.0:
                             st.warning(f"⚠️ Transitional ({years_old:.1f} yrs old): Valid for longitudinal tracking ONLY.")
                         else:
