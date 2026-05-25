@@ -43,7 +43,6 @@ if 'cases' not in st.session_state:
 
 # --- SMART HELPER FUNCTION: LOAD ASSESSMENT MATRIX ---
 def load_assessment_matrix():
-    # Look for uploaded spreadsheet files
     if os.path.exists("Assessment_Matrix.xlsx"):
         try: return pd.read_excel("Assessment_Matrix.xlsx")
         except Exception: pass
@@ -51,7 +50,6 @@ def load_assessment_matrix():
         try: return pd.read_csv("Assessment_Matrix.csv")
         except Exception: pass
         
-    # Default fallback inventory split cleanly by category
     return pd.DataFrame([
         {"Category": "Cognitive/Intellectual", "Tests Available": "WISC-V, WAIS-IV, WJ-IV COG, KABC-II"},
         {"Category": "Academic Achievement", "Tests Available": "WJ-IV ACH, KTEA-3, WIAT-4"},
@@ -224,7 +222,6 @@ with tab4:
     st.subheader("🗂️ Interactive Assessment Tool Matrix")
     st.write("This tab displays your personalized assessment menu dynamically based on your file columns.")
     
-    # DYNAMIC COLUMN SCANNER: Automatically detects whatever columns exist in your spreadsheet
     if len(matrix_df.columns) > 0:
         first_column = matrix_df.columns[0]
         try:
