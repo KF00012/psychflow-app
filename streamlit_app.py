@@ -65,7 +65,7 @@ with st.sidebar:
     st.write("---")
     
     st.subheader("📚 Resource Knowledge Base")
-    st.success("📁 Local_Policy_Manual_v2.pdf Loaded")
+    st.success("📁 Final version Policies Procedures August 2024 V2.pdf Loaded")
     
     # Policy Query Tool
     query = st.text_input("Ask a policy question:", placeholder="e.g., Timeline for initial consent?")
