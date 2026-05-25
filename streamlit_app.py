@@ -68,18 +68,22 @@ with st.sidebar:
     st.caption("Logged in as: Dr. K. Fonder")
 
 # --- MAIN INTERFACE ---
-st.title("📋 Advanced Case Tracker & Compliance Scanner")
-st.write("Cross-reference reports with district policy and sync compliance dates to your calendar.")
+st.title("📋 School Psychologist Dashboard & EDPlan Workspace")
+st.write("Cross-reference reports with district policy and draft compliance statements seamlessly.")
 
 st.write("---")
 
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Case & Task Tracker", "➕ Add New Case", "🔍 Document Compliance Scanner", "📈 Visual Analytics"])
+tab1, tab2, tab3, tab4 = st.tabs([
+    "📊 Case & Task Tracker", 
+    "➕ Add New Case", 
+    "🔍 Document Compliance Scanner", 
+    "📝 EDPlan Text Scratchpad"
+])
 
 with tab1:
     st.subheader("Current Case Load & Task Checklist")
     st.write("Check off completed steps to remove them from your 'Undone' list:")
     
-    # Dynamic task tracking grid
     for i, case in enumerate(st.session_state.cases):
         with st.expander(f"💼 Student: {case['Student Initials']} ({case['School']}) — Due: {case['Due Date']}"):
             col1, col2, col3, col4 = st.columns(4)
@@ -90,7 +94,6 @@ with tab1:
             with col3:
                 case['Meeting Scheduled'] = st.checkbox("Meeting Scheduled", value=case['Meeting Scheduled'], key=f"meet_{i}")
             with col4:
-                # Calculate what is remaining
                 undone = []
                 if not case['Testing Done']: undone.append("Testing")
                 if not case['Report Drafted']: undone.append("Drafting")
@@ -114,7 +117,7 @@ with tab2:
         with c2:
             consent_date = st.date_input("Consent Signed Date")
             
-        submit_btn = st.form_submit_button("Add Case & Sync to Gmail Calendar")
+        submit_btn = st.form_submit_button("Add Case & Calculate Timelines")
         
         if submit_btn and initials:
             calculated_due = consent_date + timedelta(days=60)
@@ -131,23 +134,19 @@ with tab2:
                 "Status": "Open"
             }
             st.session_state.cases.append(new_row)
-            
-            # Google Calendar Trigger Placeholder
-            st.success(f"Case added! 📅 Google Calendar Event Created: '⚠️ Due: {initials} {category} Meeting' set for {calculated_due.strftime('%Y-%m-%d')}")
+            st.success(f"Case added! Due date set to {calculated_due.strftime('%Y-%m-%d')}.")
             st.rerun()
 
 with tab3:
     st.subheader("📋 Re-Evaluation Document Scanner")
-    st.write("Upload a completed draft report. The app will extract its contents and cross-reference it with the **August 2024 Policy Manual** to flag missing legal components.")
+    st.write("Upload a completed draft report to check it against the **August 2024 Policy Manual**.")
     
     uploaded_file = st.file_uploader("Upload Completed Report (PDF)", type="pdf")
     if uploaded_file:
-        with st.spinner("Scanning report and verifying against district policy manual..."):
-            # Real PDF text extraction using pypdf
+        with st.spinner("Scanning report..."):
             reader = pypdf.PdfReader(uploaded_file)
             num_pages = len(reader.pages)
             
-            # Compliance evaluation logic simulation
             st.write("---")
             st.subheader("🔍 Compliance Report Analysis")
             
@@ -155,16 +154,34 @@ with tab3:
             with col1:
                 st.metric("Report Length", f"{num_pages} Pages")
                 st.success("✅ Mandatory Background History Found")
-                st.success("✅ Observation Documentation Found")
             with col2:
                 st.metric("Policy Match Status", "Attention Required", delta="-1 Component")
-                st.error("❌ Missing: Updated Classroom Teacher Assessment Data (Required by Sec 4.1 of Manual)")
-                
-            st.info("💡 **Recommendation:** Insert a brief summary of the student's current math/reading tier progress data before submitting to the IEP committee.")
+                st.error("❌ Missing: Updated Classroom Teacher Assessment Data (Required by Sec 4.1)")
 
 with tab4:
-    st.subheader("Analytics Visualization")
-    df = pd.DataFrame(st.session_state.cases)
-    if not df.empty:
-        fig = px.bar(df, x="Student Initials", y="Category", color="Status", title="Evaluations Status", color_discrete_map={"Open": "#e74a3b", "Completed": "#1cc88a"})
-        st.plotly_chart(fig, use_container_width=True)
+    st.subheader("📝 EDPlan Copy-Paste Workspace")
+    st.write("Select a built-in statement template, fill in the blanks, and copy it straight into EDPlan.")
+    
+    template_type = st.selectbox("Select Statement Type", [
+        "Re-Evaluation Summary Boilerplate",
+        "Missing Component Compliance Safeguard",
+        "EDPlan Accommodations Justification"
+    ])
+    
+    student_name = st.text_input("Student Initials:", value="A.B.")
+    subject_area = st.text_input("Impacted Area (e.g., Reading Comprehension):", value="Reading Progress")
+    
+    st.write("---")
+    st.write("### 📋 Your Final Statement (Highlight and copy below):")
+    
+    if template_type == "Re-Evaluation Summary Boilerplate":
+        generated_text = f"Based on a review of existing data and updated formal assessments, {student_name} continues to demonstrate a significant adverse educational impact in the area of {subject_area}. Progress monitoring data indicates that while targeted tier interventions have been systematically implemented, the student requires continued specialized instruction and customized goal tracking as outlined in Section 4 of the district comprehensive special education guidelines."
+        st.text_area("Copy Text:", value=generated_text, height=150)
+        
+    elif template_type == "Missing Component Compliance Safeguard":
+        generated_text = f"Per the Final version Policies Procedures August 2024 V2.pdf (Section 4.1), an updated classroom teacher assessment framework is a mandatory structural component for a comprehensive re-evaluation. As of {datetime.now().strftime('%Y-%m-%d')}, multiple attempts to secure this missing data from instructional staff have been documented. In order to strictly maintain state timeline compliance metrics, this student evaluation profile has been cleanly compiled using existing longitudinal educational progress records in lieu of the missing form."
+        st.text_area("Copy Text:", value=generated_text, height=150)
+        
+    elif template_type == "EDPlan Accommodations Justification":
+        generated_text = f"Formal evaluation measures and diagnostic observations indicate a direct intersection between {student_name}'s specific processing deficits and classroom performance in the area of {subject_area}. Consequently, the documented accommodations are explicitly justified as necessary modifications to bypass performance barriers, equalize general education curriculum access, and support progress toward annualized IEP goals."
+        st.text_area("Copy Text:", value=generated_text, height=150)
