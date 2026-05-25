@@ -34,17 +34,17 @@ if 'cases' not in st.session_state:
             "School": "Lincoln High",
             "Eval Type": "Re-evaluation",
             "Categories Needed": ["Cognitive/Intellectual", "Academic Achievement"],
-            "Consent Date": "2026-05-10",
-            "Due Date": "2026-07-09",
+            "Consent Date": "2026-04-10",
+            "Due Date": "2026-06-09",
             "Status": "Open"
         },
         {
             "Student Initials": "M.S.",
             "School": "Washington Middle",
             "Eval Type": "Initial Evaluation",
-            "Categories Needed": ["Executive Functioning / Attention", "Social-Emotional / Behavioral"],
-            "Consent Date": "2026-05-15",
-            "Due Date": "2026-07-14",
+            "Categories Needed": ["Executive Functioning / Attention"],
+            "Consent Date": "2026-04-15",
+            "Due Date": "2026-06-14",
             "Status": "Open"
         }
     ])
@@ -80,7 +80,7 @@ with st.sidebar:
     st.title("🧠 PsychFlow Pro")
     st.write("---")
     st.subheader("📚 Active Resources")
-    st.success("📁 Policy Manual Active")
+    st.success("📁 Final version Policies Procedures August 2024 V2.pdf Loaded")
     if os.path.exists("Assessment_Matrix.xlsx"):
         st.success("📊 Assessments from EDPlan Active")
     else:
@@ -101,14 +101,14 @@ tab1, tab2, tab3 = st.tabs([
 
 with tab1:
     st.subheader("Active Caseload Tracking")
-    st.write("Click on any student's name below to review criteria isolation protocols, select fresh instruments, or calculate historical data timelines:")
+    st.write("Click on any student's name below to isolate missing parameters or calculate historical lookup timelines:")
     
     for idx, row in st.session_state.cases.iterrows():
         with st.expander(f"💼 Case: {row['Student Initials']} ({row['School']}) — {row['Eval Type']} — Due: {row['Due Date']}"):
             st.markdown(f"**Target Areas Required for Criteria Check:** {', '.join(row['Categories Needed'])}")
             
             if row['Eval Type'] == "Initial Evaluation":
-                st.info("🔍 **Initial Evaluation Protocol:** Isolate missing measures. Select the instruments you intend to administer from your active catalog tabs:")
+                st.info("🔍 **Initial Evaluation Protocol:** Select the instruments you plan to administer from your active catalog tabs:")
                 for cat in row['Categories Needed']:
                     available_tests = matrix_df[matrix_df["Assessment Category Tab"] == cat]
                     if not available_tests.empty:
@@ -118,10 +118,10 @@ with tab1:
                         st.warning(f"No testing tools found in your workbook for category: '{cat}'")
                         
             else:
-                st.warning("⏳ **Re-evaluation Data Timeline Verification:** Cross-reference previous component dates against district criteria to determine if new testing is isolated:")
+                st.warning("⏳ **Re-evaluation Data Timeline Verification:** Cross-reference previous component dates against district criteria:")
                 
                 for cat in row['Categories Needed']:
-                    st.write(f"**Category Component: {cat}**")
+                    st.markdown(f"**Category Component:** `{cat}`")
                     col_date, col_status = st.columns([2, 3])
                     
                     with col_date:
@@ -132,9 +132,9 @@ with tab1:
                         if years_old > 6.0:
                             st.error(f"❌ Expired ({years_old:.1f} yrs old): Exceeds 6-year threshold. Testing isolated—New assessment mandatory.")
                         elif years_old > 3.0:
-                            st.warning(f"⚠️ Transitional ({years_old:.1f} yrs old): Valid for longitudinal tracking *ONLY*. Must be paired alongside fresh measures.")
+                            st.warning(f"⚠️ Transitional ({years_old:.1f} yrs old): Valid for longitudinal tracking ONLY. Must be paired alongside fresh measures.")
                         else:
-                            st.success(f"✅ Current ({years_old:.1f} yrs old): Within standard benchmark timelines. No immediate re-testing required.")
+                            st.success(f"✅ Current ({years_old:.1f} yrs old): Within standard benchmarks.")
 
 with tab2:
     st.subheader("Log a New Evaluation Request")
@@ -163,7 +163,7 @@ with tab2:
                     "Status": "Open"
                 }
                 st.session_state.cases = pd.concat([st.session_state.cases, pd.DataFrame([new_row])], ignore_index=True)
-                st.success(f"Case profile for {initials} built successfully! Target deadline locked to 60 days out.")
+                st.success(f"Case profile for {initials} built successfully!")
                 st.rerun()
             else:
                 st.error("Please provide student initials to compile records.")
@@ -181,10 +181,10 @@ with tab3:
         st.dataframe(matrix_df, use_container_width=True)
         
     st.write("---")
-    st.markdown("### 📤 Refresh Workbook Data Source")
-    uploaded_matrix = st.file_uploader("Upload your updated multi-tab 'Assessments from EDPlan.xlsx' file here:", type=["xlsx"])
+    st.markdown("### 📤 Upload/Refresh Workbook Data Source")
+    uploaded_matrix = st.file_uploader("Upload your updated multi-tab spreadsheet file here:", type=["xlsx"])
     if uploaded_matrix:
         with open("Assessment_Matrix.xlsx", "wb") as f:
             f.write(uploaded_matrix.getbuffer())
-        st.success("🎉 Custom workbook successfully parsed, combined, and loaded into application cache!")
+        st.success("🎉 Custom workbook successfully loaded into application cache!")
         st.rerun()
