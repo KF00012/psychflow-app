@@ -41,11 +41,25 @@ if 'cases' not in st.session_state:
         }
     ])
 
-# --- SMART HELPER FUNCTION: LOAD ASSESSMENT MATRIX ---
+# --- SMART HELPER FUNCTION: LOAD ALL WORKBOOK TABS ---
 def load_assessment_matrix():
     if os.path.exists("Assessment_Matrix.xlsx"):
-        try: return pd.read_excel("Assessment_Matrix.xlsx")
-        except Exception: pass
+        try:
+            # Read all sheets at once into a dictionary of DataFrames
+            excel_file = pd.ExcelFile("Assessment_Matrix.xlsx")
+            all_sheets = []
+            
+            for sheet_name in excel_file.sheet_names:
+                df = pd.read_excel("Assessment_Matrix.xlsx", sheet_name=sheet_name)
+                # If your tabs are named by category, we can inject that information seamlessly
+                if "Category" not in df.columns:
+                    df["Workbook Tab / Category"] = sheet_name
+                all_sheets.append(df)
+                
+            if all_sheets:
+                return pd.concat(all_sheets, ignore_index=True)
+        except Exception:
+            pass
     elif os.path.exists("Assessment_Matrix.csv"):
         try: return pd.read_csv("Assessment_Matrix.csv")
         except Exception: pass
@@ -67,7 +81,7 @@ with st.sidebar:
     st.success("📁 Final version Policies Procedures August 2024 V2.pdf Loaded")
     
     if os.path.exists("Assessment_Matrix.xlsx") or os.path.exists("Assessment_Matrix.csv"):
-        st.success("📊 Custom Assessment Matrix Loaded")
+        st.success("📊 Custom Multi-Tab Matrix Active")
     else:
         st.info("📊 Using Default Test Matrix")
     
@@ -220,7 +234,7 @@ with tab3:
 
 with tab4:
     st.subheader("🗂️ Interactive Assessment Tool Matrix")
-    st.write("This tab displays your personalized assessment menu dynamically based on your file columns.")
+    st.write("This tab displays your personalized assessment workbook menu aggregated dynamically across all sheets.")
     
     if len(matrix_df.columns) > 0:
         first_column = matrix_df.columns[0]
@@ -236,16 +250,19 @@ with tab4:
     
     st.write("---")
     st.markdown("### 📤 Upload/Refresh Your Master Spreadsheet Resource")
-    uploaded_matrix = st.file_uploader("Drop your updated test inventory spreadsheet here (.csv or .xlsx format)", type=["csv", "xlsx"])
+    uploaded_matrix = st.file_uploader("Drop your updated multi-tab test inventory spreadsheet here (.xlsx format)", type=["xlsx"])
     if uploaded_matrix:
-        if uploaded_matrix.name.endswith(".xlsx"):
-            matrix_df = pd.read_excel(uploaded_matrix)
-            matrix_df.to_excel("Assessment_Matrix.xlsx", index=False)
-            if os.path.exists("Assessment_Matrix.csv"): os.remove("Assessment_Matrix.csv")
-        else:
-            matrix_df = pd.read_csv(uploaded_matrix)
-            matrix_df.to_csv("Assessment_Matrix.csv", index=False)
-            if os.path.exists("Assessment_Matrix.xlsx"): os.remove("Assessment_Matrix.xlsx")
+        excel_file = pd.ExcelFile(uploaded_matrix)
+        all_sheets = []
+        for sheet_name in excel_file.sheet_names:
+            df = pd.read_excel(uploaded_matrix, sheet_name=sheet_name)
+            if "Category" not in df.columns:
+                df["Workbook Tab / Category"] = sheet_name
+            all_sheets.append(df)
             
-        st.success("🎉 Custom test matrix compiled and saved successfully! Your layout columns have been auto-mapped.")
+        matrix_df = pd.concat(all_sheets, ignore_index=True)
+        matrix_df.to_excel("Assessment_Matrix.xlsx", index=False)
+        if os.path.exists("Assessment_Matrix.csv"): os.remove("Assessment_Matrix.csv")
+            
+        st.success("🎉 Custom multi-tab workbook parsed and unified successfully!")
         st.rerun()
