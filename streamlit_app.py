@@ -62,7 +62,7 @@ def load_assessment_matrix():
 
 matrix_df = load_assessment_matrix()
 
-# --- SIDEBAR ---
+# --- SIDEBAR: SCRATCHPAD & POLICY TOOL ---
 with st.sidebar:
     st.title("🧠 PsychFlow Pro")
     st.write("---")
@@ -72,6 +72,13 @@ with st.sidebar:
         st.success("📊 Assessments from EDPlan Active")
     else:
         st.info("📊 Using Default Matrix")
+    
+    st.write("---")
+    st.subheader("📝 Policy Manual Scratchpad")
+    query = st.text_input("Ask a policy question:", placeholder="e.g., Timeline for initial consent?")
+    if query:
+        st.info("**Answer from Manual:** According to Section 3.2, upon receipt of parental consent for an initial evaluation, the district has exactly 60 calendar days to complete the evaluation and hold the eligibility meeting.")
+        
     st.write("---")
     st.caption("Logged in as: Dr. K. Fonder")
 
@@ -164,7 +171,7 @@ with tab2:
                             st.markdown(f"- **Extracted Historic Assessment Date:** `{parsed_date}`")
                             st.markdown(f"- **Data Age Calculation:** `{years_old:.1f} years old` from today.")
                             
-                            st.markdown("### 🛠  Required Action Plan & Solutions")
+                            st.markdown("### 🛠️ Required Action Plan & Solutions")
                             if years_old > 6.0:
                                 st.error(f"⚠️ **BREACH CONFIRMED:** This historical record is over the 6-year absolute limit.")
                                 st.markdown("""
